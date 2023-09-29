@@ -16,33 +16,26 @@ namespace Company.Function
     public static class GetResumeCounter
     {
         [FunctionName("GetResumeCounter")]
-        public static async Task<HttpResponseMessage> Run(
+        public static HttpResponseMessage Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            [CosmosDB(databaseName:"AzureResume", containerName: "Counter", Connection = "AzureResumeConnectionString", Id = "1", PartitionKey = "1")] Counter counter,
+            [CosmosDB(databaseName:"AzureResume", containerName: "Counter", Connection = "AzureResumeConnectionString", Id = "1", PartitionKey = "1")] out Counter updatedCounter,
             ILogger log)
         {
+            // Here is where the counter gets updated.
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            CosmosClient cosmosClient = new(
-                            connectionString: Environment.GetEnvironmentVariable("AzureResumeConnectionString")!
-                            );
-            
-            Database db = cosmosClient.GetDatabase("AzureResume");
+            updatedCounter = counter;
+            updatedCounter.count += 1;
 
-            Container container = db.GetContainer("Counter");
+            var jsonToRetun = JsonConvert.SerializeObject(counter);
 
-            PartitionKey partitionKey = new("1");
-
-            Counter counter = await container.ReadItemAsync<Counter>("404f9278-331f-489c-a16c-8b31e9e61141",partitionKey);
-
-            counter.count += 1;
-            
-            await container.UpsertItemAsync<Counter>(counter);
-
-            var jsonToReturn = JsonConvert.SerializeObject(counter);
-
-            return new HttpResponseMessage(System.Net.HttpStatusCode.OK) {
-                Content = new StringContent(jsonToReturn,Encoding.UTF8,"application/Json")
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(jsonToRetun, Encoding.UTF8, "application/json")
             };
+
+            
         }
     }
 }
