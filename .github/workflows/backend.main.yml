@@ -1,9 +1,9 @@
 name: deploy_backend
 on:
   push:
-    branches:
-      - main
-    paths: -'backend/**'
+    branches: [ main ]
+    paths: 
+      - 'backend/**'
 env:
   AZURE_FUNCTIONAPP_NAME: GetResumeCounter
   AZURE_FUNCTIONAPP_PACKAGE_PATH: backend
